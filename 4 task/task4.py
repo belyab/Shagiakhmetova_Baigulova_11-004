@@ -7,10 +7,6 @@ from nltk.corpus import stopwords
 from nltk.tokenize import WordPunctTokenizer
 from bs4 import BeautifulSoup
 
-PACKAGE_PATH = "downloaded_texts"
-TOKENS_LIST_PATH = "tokens_list_tf_idf"
-LEMMAS_LIST_PATH = "lemmas_list_tf_idf"
-
 
 def get_text(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
@@ -72,12 +68,12 @@ def clear_directory(directory):
                 print(f"Failed to delete {file_path}. Reason: {e}")
 
 
-def process_files(FILES_PATH, TOKENS_PATH, LEMMAS_PATH):
-    clear_directory(TOKENS_PATH)
-    clear_directory(LEMMAS_PATH)
+def process_files(files_path, tokens_path, lemmas_path):
+    clear_directory(tokens_path)
+    clear_directory(lemmas_path)
 
     files_texts = {}
-    for root, _, files in os.walk(FILES_PATH):
+    for root, _, files in os.walk(files_path):
         for file in sorted(files):
             file_path = os.path.join(root, file)
             text = get_text(file_path)
@@ -90,26 +86,26 @@ def process_files(FILES_PATH, TOKENS_PATH, LEMMAS_PATH):
         text_calc = Calculator(text)
         words_counter = Counter(text_calc.tokenizer_result)
 
-        os.makedirs(TOKENS_PATH, exist_ok=True)
+        os.makedirs(tokens_path, exist_ok=True)
         for token in text_calc.tokens:
             tf = words_counter[token] / len(text_calc.tokenizer_result)
             idf = math.log(len(files_texts) / sum(1 for text in files_texts.values() if token in text))
             tf_idf = tf * idf
-            newFile = f"{os.path.splitext(file_name)[0]}.txt"
-            with open(os.path.join(TOKENS_PATH, newFile), "a") as f:
+            new_file = f"{os.path.splitext(file_name)[0]}.txt"
+            with open(os.path.join(tokens_path, new_file), "a") as f:
                 f.write(f"{token} {idf} {tf_idf}\n")
 
-        os.makedirs(LEMMAS_PATH, exist_ok=True)
+        os.makedirs(lemmas_path, exist_ok=True)
         for lemma, tokens in text_calc.lemmas.items():
             tf_n = sum(words_counter[lemma] for lemma in [lemma] + list(tokens))
             count = sum(any(token in text for token in tokens) or lemma in text for text in files_texts.values())
             tf = tf_n / len(text_calc.tokenizer_result)
             idf = math.log(len(files_texts) / count)
             tf_idf = tf * idf
-            newFile = f"{os.path.splitext(file_name)[0]}.txt"
-            with open(os.path.join(LEMMAS_PATH, newFile), "a") as f:
+            new_file = f"{os.path.splitext(file_name)[0]}.txt"
+            with open(os.path.join(lemmas_path, new_file), "a") as f:
                 f.write(f"{lemma} {idf} {tf_idf}\n")
 
 
-if __name__ == "__main__":
-    process_files(PACKAGE_PATH, TOKENS_LIST_PATH, LEMMAS_LIST_PATH)
+if name == "__main__":
+    process_files("downloaded_texts", "tokens_list_tf_idf", "lemmas_list_tf_idf")
